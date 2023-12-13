@@ -1,25 +1,25 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"google.golang.org/grpc"
-	"sync"
-	"context"
-	"io/ioutil"
-	"encoding/json"
 	"log"
 	"net"
+	"os"
+	"sync"
 
 	pb "atn.lie/grpc/price-aggregator/modules/user"
 )
 
 type UserDataServer struct {
 	pb.UnimplementedUserDataServer
-	mu sync.Mutex
+	mu    sync.Mutex
 	users []*pb.GetUserDataResponse
 }
 
-func (d *UserDataServer) GetUserData(ctx context.Context, user *pb.GetUserDataRequest) (*pb.GetUserDataResponse, error) {
+func (d *UserDataServer) GetUserData(_ context.Context, user *pb.GetUserDataRequest) (*pb.GetUserDataResponse, error) {
 	for _, v := range d.users {
 		if v.UserId == user.UserId {
 			return v, nil
@@ -30,34 +30,33 @@ func (d *UserDataServer) GetUserData(ctx context.Context, user *pb.GetUserDataRe
 }
 
 func (d *UserDataServer) loadDataFromFile() {
-	data, error := ioutil.ReadFile("fixtures/users.json")
-	if error != nil {
-		log.Fatalf("Error while read file %s", error.Error())
+	data, err := os.ReadFile("fixtures/users.json")
+	if err != nil {
+		log.Fatalf("Error while read file %s", err.Error())
 	}
 
-	if error := json.Unmarshal(data, &d.users); error != nil {
-		log.Fatalf("Error while unmarshal json %s", error.Error())
+	if err := json.Unmarshal(data, &d.users); err != nil {
+		log.Fatalf("Error while unmarshal json %s", err.Error())
 	}
 }
 
-func dataServer() *UserDataServer{
-	s:= UserDataServer{}
+func dataServer() *UserDataServer {
+	s := UserDataServer{}
 	s.loadDataFromFile()
 	return &s
 }
 
 func main() {
-	listener, error := net.Listen("tcp", ":8080")
-	fmt.Println("lancar jaya")
-	if error != nil {
-		log.Fatalf("Error while listen %s", error.Error())
+	listener, err := net.Listen("tcp", ":8080")
+	fmt.Println("Starting Serve on port 8080")
+	if err != nil {
+		log.Fatalf("Error while listen %s", err.Error())
 	}
 
 	grpcServer := grpc.NewServer()
 	pb.RegisterUserDataServer(grpcServer, dataServer())
 
-	if error := grpcServer.Serve(listener); error != nil {
-		log.Fatalf("Error while serve %s", error.Error())
+	if err := grpcServer.Serve(listener); err != nil {
+		log.Fatalf("Error while serve %s", err.Error())
 	}
 }
-
