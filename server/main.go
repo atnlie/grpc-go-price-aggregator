@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"google.golang.org/grpc"
 	"sync"
 	"context"
@@ -29,7 +30,7 @@ func (d *UserDataServer) GetUserData(ctx context.Context, user *pb.GetUserDataRe
 }
 
 func (d *UserDataServer) loadDataFromFile() {
-	data, error := ioutil.ReadFile("fixture/users.json")
+	data, error := ioutil.ReadFile("fixtures/users.json")
 	if error != nil {
 		log.Fatalf("Error while read file %s", error.Error())
 	}
@@ -47,6 +48,7 @@ func dataServer() *UserDataServer{
 
 func main() {
 	listener, error := net.Listen("tcp", ":8080")
+	fmt.Println("lancar jaya")
 	if error != nil {
 		log.Fatalf("Error while listen %s", error.Error())
 	}
