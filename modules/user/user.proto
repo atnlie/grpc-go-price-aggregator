@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option java_package = "com.atnlie/grpc/price-aggregator/user";
+package user;
+
+service UserData {
+    rpc GetUserData (GetUserDataRequest) returns (GetUserDataResponse);
+}
+
+message GetUserDataRequest {
+    string user_id = 1;
+    string password = 2;
+}
+
+message GetUserDataResponse {
+    string user_id = 1;
+    string user_name = 2;
+    string user_email = 3;
+    int32 role_id = 4;
+    int32 tenant_id = 5;
+}
