@@ -1,6 +1,7 @@
 syntax = "proto3";
 
-option java_package = "com.atnlie/grpc/price-aggregator/user";
+option go_package = "atn.lie/grpc/price-aggregator/module/user";
+
 package user;
 
 service UserData {
