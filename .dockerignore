@@ -1,0 +1,7 @@
+client
+docker-compose.yml
+Dockerfile
+go.mod
+go.sum
+.idea
+.git

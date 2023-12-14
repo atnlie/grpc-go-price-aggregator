@@ -7,7 +7,6 @@ COPY . ./
 RUN go mod verify
 RUN go mod download
 RUN go mod tidy
-
 RUN go build server/main.go
 
 EXPOSE 8880
