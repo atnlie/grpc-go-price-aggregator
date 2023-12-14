@@ -30,7 +30,7 @@ func (d *UserDataServer) GetUserData(_ context.Context, user *pb.GetUserDataRequ
 }
 
 func (d *UserDataServer) loadDataFromFile() {
-	data, err := os.ReadFile("fixtures/users.json")
+	data, err := os.ReadFile("./server/fixtures/users.json")
 	if err != nil {
 		log.Fatalf("Error while read file %s", err.Error())
 	}
@@ -47,7 +47,7 @@ func dataServer() *UserDataServer {
 }
 
 func main() {
-	listener, err := net.Listen("tcp", ":8080")
+	listener, err := net.Listen("tcp", ":8880")
 	fmt.Println("Starting Serve on port 8080")
 	if err != nil {
 		log.Fatalf("Error while listen %s", err.Error())

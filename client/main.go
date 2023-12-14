@@ -30,7 +30,7 @@ func main() {
 	opts = append(opts, grpc.WithBlock())
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
-	conn, err := grpc.Dial(":8080", opts...)
+	conn, err := grpc.Dial(":8880", opts...)
 	if err != nil {
 		log.Fatalf("Error in Dial %s", err.Error())
 	}

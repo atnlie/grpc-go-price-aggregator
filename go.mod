@@ -3,12 +3,12 @@ module atn.lie/grpc/price-aggregator
 go 1.21.5
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	google.golang.org/grpc v1.60.0
 	google.golang.org/protobuf v1.31.0
 )
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	golang.org/x/net v0.16.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
