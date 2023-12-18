@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  grpc-user-server:
+    container_name: grpc-user-server
+#    image: atnlie/grpc-user-server:v1.0
+    build:
+      context: .
+      dockerfile: Dockerfile.stg
+      args:
+        - VERSION=1.0.0
+    ports:
+      - "8880:8880"
+    environment:
+      - COPYRIGHT=atnlie@2023
+#  grpc-user-client:
+#    container_name: grpc-user-client
+#

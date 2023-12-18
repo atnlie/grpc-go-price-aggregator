@@ -1,7 +1,6 @@
 client
-docker-compose.yml
+docker-compose.stg.yml
 Dockerfile
-go.mod
 go.sum
 .idea
 .git

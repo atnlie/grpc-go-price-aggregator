@@ -4,8 +4,15 @@ option go_package = "atn.lie/grpc/price-aggregator/module/user";
 
 package user;
 
+import "google/api/annotations.proto";
+
 service UserData {
-    rpc GetUserData (GetUserDataRequest) returns (GetUserDataResponse);
+    rpc GetUserData (GetUserDataRequest) returns (GetUserDataResponse) {
+        option(google.api.http) = {
+            post: "/v1/aggregator/user",
+            body: "*"
+        };
+    };
 }
 
 message GetUserDataRequest {

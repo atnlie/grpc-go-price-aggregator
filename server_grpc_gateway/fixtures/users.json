@@ -1,0 +1,23 @@
+[
+    {
+        "user_id": "abcdef-123456",
+        "user_name": "atnliex",
+        "user_email": "atnliex@gmail.com",
+        "role_id": 1,
+        "tenant_id": 1
+    },
+    {
+        "user_id": "abcdeg-123457",
+        "user_name": "austin",
+        "user_email": "austin@gmail.com",
+        "role_id": 1,
+        "tenant_id": 2
+    },
+    {
+        "user_id": "abcdeh-123458",
+        "user_name": "amanda",
+        "user_email": "amanda@gmail.com",
+        "role_id": 2,
+        "tenant_id": 1
+    }
+]
