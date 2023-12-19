@@ -30,21 +30,21 @@ service UserData {
 }
 
 message GetUserDataRequest {
-    string user_id = 1;
+    string userid = 1;
     string password = 2;
 }
 
 message GetUserDataResponse {
-    string user_id = 1;
-    string user_name = 2;
-    string user_email = 3;
+    string userid = 1;
+    string username = 2;
+    string email = 3;
     string password=4;
 }
 
 message NewUserData {
-    string user_id = 1;
-    string user_name = 2;
-    string user_email = 3;
+    string userid = 1;
+    string username = 2;
+    string email = 3;
     string password=4;
 }
 

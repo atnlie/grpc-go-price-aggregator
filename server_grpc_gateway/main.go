@@ -54,33 +54,44 @@ func userDataMgmServer() *UserDataServer {
 }
 
 // Use DB as permanent storage of data
-func (dataServer *UserDataServer) createNewUser(ctx context.Context, req *pb.NewUserData) (*pb.NewUserData, error) {
-	log.Printf("Data %v", req.GetUserName())
-	qrySql := "create table if not exists " +
-		"users(userid uuid PRIMARY KEY,email varchar(255) not null unique, username varchar(255) not null unique, password text not null);"
+func (dataServer *UserDataServer) CreateNewUser(_ context.Context, req *pb.NewUserData) (*pb.GetUserDataResponse, error) {
+	log.Printf("Data %v", req)
+	qrySql := "create table if not exists users(userid uuid PRIMARY KEY, email varchar(255) not null unique, username varchar(255) not null unique, password text not null);"
 
 	_, err := dataServer.conn.Exec(context.Background(), qrySql)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Table creation failed. %v\n", err)
+		_, err := fmt.Fprintf(os.Stderr, "Table creation failed. %v\n", err)
+		if err != nil {
+			return nil, err
+		}
 		os.Exit(1)
 	}
 	userId := uuid.New()
-	createUser := &pb.NewUserData{UserId: userId.String(), UserName: req.GetUserName(), UserEmail: req.GetUserEmail(),
+	createUser := &pb.GetUserDataResponse{Userid: userId.String(), Username: req.GetUsername(), Email: req.GetEmail(),
 		Password: req.Password}
 	tx, err := dataServer.conn.Begin(context.Background())
 	if err != nil {
 		log.Fatalf("conn.Begin failed. %v", err)
 	}
 
-	_, err = tx.Exec(context.Background(), "Insert into users(userId, email, username, password) values ($1, $2, $3, $4)",
-		createUser.UserId, createUser.UserEmail, createUser.UserName, createUser.Password)
+	_, err = tx.Exec(context.Background(), "INSERT INTO users(userid, email, username, password) values ($1, $2, $3, $4)",
+		createUser.Userid, createUser.Email, createUser.Username, createUser.Password)
 	if err != nil {
-		log.Fatalf("tx.Exec failed. %v", err)
+		log.Printf("Some issues %v", err.Error())
+		tx.Rollback(context.Background())
+		return nil, err
 	}
+
+	err = tx.Commit(context.Background())
+
+	if err != nil {
+		return nil, err
+	}
+
 	return createUser, nil
 }
 
-func (dataServer *UserDataServer) LoginUser(ctx context.Context, req *pb.LoginRequest) (*pb.GetUserDataResponse, error) {
+func (dataServer *UserDataServer) LoginUser(_ context.Context, req *pb.LoginRequest) (*pb.GetUserDataResponse, error) {
 	row, err := dataServer.conn.Query(context.Background(), "Select userid, email, username, password from users where username = $1 and password = $2",
 		req.GetUsername(), req.GetPassword())
 	if err != nil {
@@ -91,7 +102,7 @@ func (dataServer *UserDataServer) LoginUser(ctx context.Context, req *pb.LoginRe
 	var activeUser *pb.GetUserDataResponse
 	for row.Next() {
 		user := &pb.GetUserDataResponse{}
-		err = row.Scan(&user.UserId, &user.UserEmail, &user.UserName, &user.Password)
+		err = row.Scan(&user.Userid, &user.Email, &user.Username, &user.Password)
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +114,7 @@ func (dataServer *UserDataServer) LoginUser(ctx context.Context, req *pb.LoginRe
 
 func (dataServer *UserDataServer) GetUserData(_ context.Context, user *pb.GetUserDataRequest) (*pb.GetUserDataResponse, error) {
 	for _, v := range dataServer.users {
-		if v.UserId == user.UserId {
+		if v.Userid == user.Userid {
 			return v, nil
 		}
 	}
