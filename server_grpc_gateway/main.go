@@ -2,6 +2,7 @@ package main
 
 import (
 	pb "atn.lie/grpc/price-aggregator/modules/user"
+	auth "atn.lie/grpc/price-aggregator/server_grpc_gateway/internal"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -67,18 +68,27 @@ func (dataServer *UserDataServer) CreateNewUser(_ context.Context, req *pb.NewUs
 		os.Exit(1)
 	}
 	userId := uuid.New()
+	hashPass, err := auth.HashAndSalt([]byte(req.Password))
+	if err != nil {
+		return nil, err
+	}
+
 	createUser := &pb.GetUserDataResponse{Userid: userId.String(), Username: req.GetUsername(), Email: req.GetEmail(),
-		Password: req.Password}
+		Password: hashPass}
 	tx, err := dataServer.conn.Begin(context.Background())
 	if err != nil {
 		log.Fatalf("conn.Begin failed. %v", err)
 	}
 
-	_, err = tx.Exec(context.Background(), "INSERT INTO users(userid, email, username, password) values ($1, $2, $3, $4)",
+	_, err = tx.Exec(context.Background(),
+		"INSERT INTO users(userid, email, username, password) values ($1, $2, $3, $4)",
 		createUser.Userid, createUser.Email, createUser.Username, createUser.Password)
 	if err != nil {
 		log.Printf("Some issues %v", err.Error())
-		tx.Rollback(context.Background())
+		err := tx.Rollback(context.Background())
+		if err != nil {
+			return nil, err
+		}
 		return nil, err
 	}
 
@@ -92,8 +102,9 @@ func (dataServer *UserDataServer) CreateNewUser(_ context.Context, req *pb.NewUs
 }
 
 func (dataServer *UserDataServer) LoginUser(_ context.Context, req *pb.LoginRequest) (*pb.GetUserDataResponse, error) {
-	row, err := dataServer.conn.Query(context.Background(), "Select userid, email, username, password from users where username = $1 and password = $2",
-		req.GetUsername(), req.GetPassword())
+	row, err := dataServer.conn.Query(context.Background(),
+		"Select userid, email, username, password from users where username = $1",
+		req.GetUsername())
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +118,11 @@ func (dataServer *UserDataServer) LoginUser(_ context.Context, req *pb.LoginRequ
 			return nil, err
 		}
 		activeUser = user
+	}
+
+	_, err = auth.ComparePasswords(activeUser.Password, []byte(req.Password))
+	if err != nil {
+		return nil, err
 	}
 
 	return activeUser, nil
