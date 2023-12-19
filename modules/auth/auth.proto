@@ -6,7 +6,7 @@ package auth;
 
 import "google/api/annotations.proto";
 
-service auth {
+service AuthService {
   rpc SetHashPassword (SetPassword) returns (HashPassword) {
     option(google.api.http) = {
       post: "/v1/aggregator/hash-password"

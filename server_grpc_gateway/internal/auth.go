@@ -8,7 +8,7 @@ import (
 )
 
 type AuthServer struct {
-	pb.UnimplementedAuthServer
+	pb.UnimplementedAuthServiceServer
 	pass *[]pb.HashPassword
 }
 
