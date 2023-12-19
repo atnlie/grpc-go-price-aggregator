@@ -13,6 +13,20 @@ service UserData {
             body: "*"
         };
     };
+
+    rpc CreateNewUser (NewUserData) returns (GetUserDataResponse) {
+        option(google.api.http) = {
+            post: "/v1/aggregator/new-user",
+            body: "*"
+        };
+    }
+
+    rpc LoginUser (LoginRequest) returns (GetUserDataResponse) {
+        option(google.api.http) = {
+            post: "/v1/aggregator/login",
+            body: "*"
+        };
+    }
 }
 
 message GetUserDataRequest {
@@ -24,6 +38,17 @@ message GetUserDataResponse {
     string user_id = 1;
     string user_name = 2;
     string user_email = 3;
-    int32 role_id = 4;
-    int32 tenant_id = 5;
+    string password=4;
+}
+
+message NewUserData {
+    string user_id = 1;
+    string user_name = 2;
+    string user_email = 3;
+    string password=4;
+}
+
+message LoginRequest {
+    string username = 1;
+    string password = 2;
 }

@@ -19,7 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	UserData_GetUserData_FullMethodName = "/user.UserData/GetUserData"
+	UserData_GetUserData_FullMethodName   = "/user.UserData/GetUserData"
+	UserData_CreateNewUser_FullMethodName = "/user.UserData/CreateNewUser"
+	UserData_LoginUser_FullMethodName     = "/user.UserData/LoginUser"
 )
 
 // UserDataClient is the client API for UserData service.
@@ -27,6 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserDataClient interface {
 	GetUserData(ctx context.Context, in *GetUserDataRequest, opts ...grpc.CallOption) (*GetUserDataResponse, error)
+	CreateNewUser(ctx context.Context, in *NewUserData, opts ...grpc.CallOption) (*GetUserDataResponse, error)
+	LoginUser(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*GetUserDataResponse, error)
 }
 
 type userDataClient struct {
@@ -46,11 +50,31 @@ func (c *userDataClient) GetUserData(ctx context.Context, in *GetUserDataRequest
 	return out, nil
 }
 
+func (c *userDataClient) CreateNewUser(ctx context.Context, in *NewUserData, opts ...grpc.CallOption) (*GetUserDataResponse, error) {
+	out := new(GetUserDataResponse)
+	err := c.cc.Invoke(ctx, UserData_CreateNewUser_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userDataClient) LoginUser(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*GetUserDataResponse, error) {
+	out := new(GetUserDataResponse)
+	err := c.cc.Invoke(ctx, UserData_LoginUser_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserDataServer is the server API for UserData service.
 // All implementations must embed UnimplementedUserDataServer
 // for forward compatibility
 type UserDataServer interface {
 	GetUserData(context.Context, *GetUserDataRequest) (*GetUserDataResponse, error)
+	CreateNewUser(context.Context, *NewUserData) (*GetUserDataResponse, error)
+	LoginUser(context.Context, *LoginRequest) (*GetUserDataResponse, error)
 	mustEmbedUnimplementedUserDataServer()
 }
 
@@ -60,6 +84,12 @@ type UnimplementedUserDataServer struct {
 
 func (UnimplementedUserDataServer) GetUserData(context.Context, *GetUserDataRequest) (*GetUserDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserData not implemented")
+}
+func (UnimplementedUserDataServer) CreateNewUser(context.Context, *NewUserData) (*GetUserDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateNewUser not implemented")
+}
+func (UnimplementedUserDataServer) LoginUser(context.Context, *LoginRequest) (*GetUserDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LoginUser not implemented")
 }
 func (UnimplementedUserDataServer) mustEmbedUnimplementedUserDataServer() {}
 
@@ -92,6 +122,42 @@ func _UserData_GetUserData_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserData_CreateNewUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NewUserData)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserDataServer).CreateNewUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserData_CreateNewUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserDataServer).CreateNewUser(ctx, req.(*NewUserData))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserData_LoginUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserDataServer).LoginUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserData_LoginUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserDataServer).LoginUser(ctx, req.(*LoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserData_ServiceDesc is the grpc.ServiceDesc for UserData service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -102,6 +168,14 @@ var UserData_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserData",
 			Handler:    _UserData_GetUserData_Handler,
+		},
+		{
+			MethodName: "CreateNewUser",
+			Handler:    _UserData_CreateNewUser_Handler,
+		},
+		{
+			MethodName: "LoginUser",
+			Handler:    _UserData_LoginUser_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
