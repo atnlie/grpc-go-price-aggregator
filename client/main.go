@@ -9,14 +9,14 @@ import (
 	"log"
 	"time"
 
-	pb "atn.lie/grpc/price-aggregator/modules/user"
+	pb "atn.lie/grpc/price-aggregator/pb/user"
 )
 
 func getUserData(client pb.UserDataClient, userId string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	req := pb.GetUserDataRequest{UserId: userId}
+	req := pb.GetUserDataRequest{Userid: userId}
 	user, err := client.GetUserData(ctx, &req)
 	if err != nil {
 		log.Fatalf("error while get User %s", userId)

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "atn.lie/grpc/price-aggregator/module/user";
+option go_package = "atn.lie/grpc/price-aggregator/pb/user";
 
 package user;
 
@@ -9,21 +9,21 @@ import "google/api/annotations.proto";
 service UserData {
     rpc GetUserData (GetUserDataRequest) returns (GetUserDataResponse) {
         option(google.api.http) = {
-            post: "/v1/aggregator/user",
+            post: "/user/v1/aggregator/user"
             body: "*"
         };
     };
 
     rpc CreateNewUser (NewUserData) returns (GetUserDataResponse) {
         option(google.api.http) = {
-            post: "/v1/aggregator/new-user",
+            post: "/user/v1/aggregator/new-user"
             body: "*"
         };
     }
 
     rpc LoginUser (LoginRequest) returns (GetUserDataResponse) {
         option(google.api.http) = {
-            post: "/v1/aggregator/login",
+            post: "/user/v1/aggregator/login"
             body: "*"
         };
     }

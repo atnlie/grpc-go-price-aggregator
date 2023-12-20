@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "atn.lie/grpc/price-aggregator/module/auth";
+option go_package = "atn.lie/grpc/price-aggregator/pb/auth";
 
 package auth;
 
@@ -9,7 +9,7 @@ import "google/api/annotations.proto";
 service AuthService {
   rpc SetHashPassword (SetPassword) returns (HashPassword) {
     option(google.api.http) = {
-      post: "/v1/aggregator/hash-password"
+      post: "/auth/v1/aggregator/hash-password"
       body: "*"
     };
   }

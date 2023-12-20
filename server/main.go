@@ -10,7 +10,7 @@ import (
 	"os"
 	"sync"
 
-	pb "atn.lie/grpc/price-aggregator/modules/user"
+	pb "atn.lie/grpc/price-aggregator/pb/user"
 )
 
 type UserDataServer struct {
@@ -21,7 +21,7 @@ type UserDataServer struct {
 
 func (d *UserDataServer) GetUserData(_ context.Context, user *pb.GetUserDataRequest) (*pb.GetUserDataResponse, error) {
 	for _, v := range d.users {
-		if v.UserId == user.UserId {
+		if v.Userid == user.Userid {
 			return v, nil
 		}
 	}

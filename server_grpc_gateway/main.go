@@ -1,12 +1,13 @@
 package main
 
 import (
-	pb "atn.lie/grpc/price-aggregator/modules/user"
+	pa "atn.lie/grpc/price-aggregator/pb/auth"
+	pb "atn.lie/grpc/price-aggregator/pb/user"
 	auth "atn.lie/grpc/price-aggregator/server_grpc_gateway/internal"
-	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/google/uuid"
+
+	"context"
+	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
@@ -16,7 +17,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"sync"
 )
 
 const (
@@ -27,31 +27,42 @@ const (
 type UserDataServer struct {
 	conn *pgx.Conn
 	pb.UnimplementedUserDataServer
-	mu    sync.Mutex
-	users []*pb.GetUserDataResponse
+	//mu    sync.Mutex
+	//users []*pb.GetUserDataResponse
 }
 
-func (dataServer *UserDataServer) loadDataFromFile() {
-	data, err := os.ReadFile("./server_grpc_gateway/fixtures/users.json")
-	if err != nil {
-		log.Fatalf("Error while read file %s", err.Error())
-	}
-
-	if err := json.Unmarshal(data, &dataServer.users); err != nil {
-		log.Fatalf("Error while unmarshal json %s", err.Error())
-	}
+type AuthServiceServer struct {
+	conn *pgx.Conn
+	pa.UnimplementedAuthServiceServer
+	//mu   sync.Mutex
+	//pass []*pa.HashPassword
 }
 
-func dataJsonServer() *UserDataServer {
-	s := UserDataServer{}
-	s.loadDataFromFile()
-	log.Println(&s.users)
+//func (dataServer *UserDataServer) loadDataFromFile() {
+//	data, err := os.ReadFile("./server_grpc_gateway/fixtures/users.json")
+//	if err != nil {
+//		log.Fatalf("Error while read file %s", err.Error())
+//	}
+//
+//	if err := json.Unmarshal(data, &dataServer.users); err != nil {
+//		log.Fatalf("Error while unmarshal json %s", err.Error())
+//	}
+//}
 
-	return &s
-}
+//func dataJsonServer() *UserDataServer {
+//	s := UserDataServer{}
+//	s.loadDataFromFile()
+//	log.Println(&s.users)
+//
+//	return &s
+//}
 
 func userDataMgmServer() *UserDataServer {
 	return &UserDataServer{}
+}
+
+func authMgtServiceServer() *AuthServiceServer {
+	return &AuthServiceServer{}
 }
 
 // Use DB as permanent storage of data
@@ -128,15 +139,15 @@ func (dataServer *UserDataServer) LoginUser(_ context.Context, req *pb.LoginRequ
 	return activeUser, nil
 }
 
-func (dataServer *UserDataServer) GetUserData(_ context.Context, user *pb.GetUserDataRequest) (*pb.GetUserDataResponse, error) {
-	for _, v := range dataServer.users {
-		if v.Userid == user.Userid {
-			return v, nil
-		}
-	}
-
-	return nil, nil
-}
+//func (dataServer *UserDataServer) GetUserData(_ context.Context, user *pb.GetUserDataRequest) (*pb.GetUserDataResponse, error) {
+//	for _, v := range dataServer.users {
+//		if v.Userid == user.Userid {
+//			return v, nil
+//		}
+//	}
+//
+//	return nil, nil
+//}
 
 func goEnvVar(key string) string {
 	err := godotenv.Load(".env")
@@ -144,6 +155,16 @@ func goEnvVar(key string) string {
 		log.Fatalf("Error loading .env file")
 	}
 	return os.Getenv(key)
+}
+
+func (authServer *AuthServiceServer) SetHashPassword(ctx context.Context, req *pa.SetPassword) (*pa.HashPassword, error) {
+	newPass := []byte(req.NewPassword)
+	pass, err := auth.HashAndSalt(newPass)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pa.HashPassword{HashPassword: pass}, nil
 }
 
 func main() {
@@ -166,10 +187,14 @@ func main() {
 	defer pgxConn.Close(context.Background())
 	var userMgmServer = userDataMgmServer()
 	userMgmServer.conn = pgxConn
+	var authServer = authMgtServiceServer()
+	authServer.conn = pgxConn
 
 	grpcServer := grpc.NewServer()
 	//pb.RegisterUserDataServer(grpcServer, dataJsonServer())
 	pb.RegisterUserDataServer(grpcServer, userMgmServer)
+	pa.RegisterAuthServiceServer(grpcServer, authServer)
+
 	log.Println("Serving gRPC on 0.0.0.0" + gRPCPort)
 	go func() {
 		log.Fatalln(grpcServer.Serve(listener))
@@ -197,12 +222,29 @@ func main() {
 		log.Fatalf("Failed to dial server %s", err.Error())
 	}
 
-	gwMux := runtime.NewServeMux()
-	err = pb.RegisterUserDataHandler(context.Background(), gwMux, conn)
+	gwMuxUser := runtime.NewServeMux()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	//err = pb.RegisterUserDataHandler(context.Background(), gwMux, conn)
+	err = pb.RegisterUserDataHandler(ctx, gwMuxUser, conn)
 	if err != nil {
 		log.Fatalf("Failed to register gateway %s", err.Error())
 	}
-	gwSever := &http.Server{Addr: gRPCGwPort, Handler: gwMux}
+
+	gwMuxAuth := runtime.NewServeMux()
+	err = pa.RegisterAuthServiceHandler(context.Background(), gwMuxAuth, conn)
+	if err != nil {
+		log.Fatalf("Failed to register gateway %s", err.Error())
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/user/", gwMuxUser)
+	mux.Handle("/auth/", gwMuxAuth)
+
+	gwServer := &http.Server{Addr: gRPCGwPort, Handler: mux}
+
 	log.Println("Serving gRPC-Gateway on http://0.0.0.0" + gRPCGwPort)
-	log.Fatalln(gwSever.ListenAndServe())
+	log.Fatalln(gwServer.ListenAndServe())
+
 }
