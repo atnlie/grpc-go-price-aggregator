@@ -167,6 +167,16 @@ func (authServer *AuthServiceServer) SetHashPassword(ctx context.Context, req *p
 	return &pa.HashPassword{HashPassword: pass}, nil
 }
 
+func unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	log.Println("Unary Interceptor ---> :", info.FullMethod)
+	return handler(ctx, req)
+}
+
+func streamInterceptor(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	log.Println("Stream Interceptor ---> :", info.FullMethod)
+	return handler(srv, ss)
+}
+
 func main() {
 	listener, err := net.Listen("tcp", gRPCPort)
 	fmt.Println("Starting Serve on port " + gRPCPort)
@@ -190,7 +200,11 @@ func main() {
 	var authServer = authMgtServiceServer()
 	authServer.conn = pgxConn
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(unaryInterceptor),
+		grpc.StreamInterceptor(streamInterceptor),
+	)
+
 	//pb.RegisterUserDataServer(grpcServer, dataJsonServer())
 	pb.RegisterUserDataServer(grpcServer, userMgmServer)
 	pa.RegisterAuthServiceServer(grpcServer, authServer)
